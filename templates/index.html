@@ -1,0 +1,107 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Oswald:wght@200..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>The<br> Summarizer</h1>
+            <!-- <img src="./static/images/dog.jpg" alt="dog"> -->
+        </div>
+
+        <div id="app">
+
+            <textarea name="" id="" placeholder="Paste text here" v-model="text">
+            </textarea>
+            <div class="summarize">
+                <div class="summary-length">
+                    1<input type="range" min="0" max="100" v-model="summary_length">100
+                    <p>Summary Length: { summary_length } words</p>
+                </div>
+                <button @click="getSummary">Summarize</button>
+            </div>
+
+
+            <div v-if="loading == true" class="waiting">
+                <span class="loader"></span>
+                <p>Loading...</p>
+            </div>
+            <div v-else>
+                <textarea name="" id="" placeholder="See summary here" v-model="summary">
+                    </textarea>
+            </div>
+
+            <div class="controls">
+                <button :disabled="summary == ''" @click="copyText">Copy</button>
+                <button @click="clearText">Clear</button>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    message: 'Hello Vue!',
+                    text: "",
+                    summary_length: 20,
+                    summary: "",
+                    loading: false,
+                }
+            },
+            delimiters: ['{', '}'],
+            methods: {
+                copyText() {
+                    if (this.summary != "") {
+                        window.navigator.clipboard.writeText(this.summary);
+                    }
+                },
+                clearText() {
+                    this.text = ""
+                    this.summary = ""
+                },
+                async getSummary() {
+                    try {
+                        this.loading = true
+                        const response = await fetch('/summary', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                text: this.text,
+                                text_length: this.summary_length  // or whatever your length variable is
+                            })
+                        });
+                        const data = await response.json();
+                        if (data) {
+                            this.loading = false
+                        }
+                        console.log(data)
+                        this.summary = data
+                    } catch (error) {
+                        throw new Error('Network error: ' + error.message);
+                    }
+                }
+            },
+        }).mount('#app')
+    </script>
+</body>
+
+</html>
